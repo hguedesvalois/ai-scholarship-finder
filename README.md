@@ -18,7 +18,7 @@ Um assistente inteligente de recomendação e busca de bolsas de estudo na Europ
 scholarship-ai-finder/
 │
 ├── data/                  # Editais e documentos em PDF/Texto
-│   ├── editais/
+│   ├── scholarships/
 │   └── scholarships.db    # Banco de dados SQLite local
 │
 ├── .env                   # Variáveis de ambiente (GROQ_API_KEY)
