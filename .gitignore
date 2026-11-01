@@ -1,0 +1,15 @@
+# Ambiente virtual
+.aisfenv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ficheiros de configuração sensíveis
+.env
+
+# Bases de dados locais e temporárias
+data/*.db
