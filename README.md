@@ -70,17 +70,12 @@ pandas
    pip install -r requirements.txt
    ```
 
-4. **Inicializar o Banco de Dados SQL:**
-   ```bash
-   python database/init_db.py
-   ```
-
-5. **Configurar a API Key no `.env`:**
+4. **Configurar a API Key no `.env`:**
    ```env
    GROQ_API_KEY="gsk_sua_chave_groq_aqui"
    ```
 
-6. **Executar a aplicação:**
+5. **Executar a aplicação:**
    ```bash
    streamlit run app.py
    ```
