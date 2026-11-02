@@ -52,8 +52,8 @@ pandas
 
 1. **Clonar o repositório e acessar a pasta:**
    ```bash
-   git clone https://github.com/seu-usuario/scholarship-ai-finder.git
-   cd scholarship-ai-finder
+   git clone https://github.com/hguedesvalois/ai-scholarship-finder.git
+   cd ai-scholarship-finder
    ```
 
 2. **Criar e ativar o ambiente virtual (venv):**
