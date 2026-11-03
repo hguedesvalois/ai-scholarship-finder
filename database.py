@@ -28,7 +28,6 @@ def init_db():
 
     conn.commit()
     conn.close()
-    print("✅ Base de dados relacional SQLite inicializada com sucesso!")
 
 def add_scholarship(title, institution, deadline, requirements_summary, pdf_source, status="Pendente"):
     """Adiciona um novo registo de bolsa de estudo na base de dados."""

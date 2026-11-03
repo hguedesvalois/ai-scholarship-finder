@@ -19,6 +19,7 @@ scholarship-ai-finder/
 │
 ├── data/                  # Editais e documentos em PDF/Texto
 │   ├── scholarships/
+│   ├── faiss_index/       # Índice vetorial FAISS (gerado automaticamente)
 │   └── scholarships.db    # Banco de dados SQLite local
 │
 ├── .env                   # Variáveis de ambiente (GROQ_API_KEY)
@@ -36,15 +37,23 @@ scholarship-ai-finder/
 
 ```text
 streamlit==1.32.0
-langchain==0.1.0
-langchain-community==0.0.20
+langchain==0.1.20
+langchain-community==0.0.38
+langchain-core==0.1.52
+langchain-text-splitters==0.0.2
 langchain-groq==0.0.1
 sentence-transformers==2.5.1
-chromadb==0.4.22
+faiss-cpu==1.15.1
 pypdf==4.0.0
 python-dotenv==1.0.0
-pandas
 ```
+
+> **Nota:** instale o PyTorch **CPU-only** antes do `requirements.txt`, caso contrário o pip
+> descarrega ~5 GB de bibliotecas CUDA/NVIDIA que o projeto não utiliza (os embeddings
+> correm na CPU):
+> ```bash
+> pip install torch --index-url https://download.pytorch.org/whl/cpu
+> ```
 
 ---
 
@@ -65,8 +74,9 @@ pandas
    source venv/bin/activate
    ```
 
-3. **Instalar dependências:**
+3. **Instalar dependências (PyTorch CPU-only primeiro):**
    ```bash
+   pip install torch --index-url https://download.pytorch.org/whl/cpu
    pip install -r requirements.txt
    ```
 

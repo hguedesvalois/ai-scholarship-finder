@@ -1,3 +1,4 @@
+import glob
 import os
 from dotenv import load_dotenv
 
@@ -11,14 +12,54 @@ from langchain_community.vectorstores import FAISS
 from langchain_groq import ChatGroq
 from langchain.chains import RetrievalQA
 
-def build_vector_store(data_folder="data/scholarships"):
+EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+DEFAULT_INDEX_FOLDER = "data/faiss_index"
+
+
+def get_embeddings():
+    """Embeddings 100% locais (gratuitos e rodando na CPU)."""
+    return HuggingFaceEmbeddings(
+        model_name=EMBEDDING_MODEL,
+        model_kwargs={"device": "cpu"},
+    )
+
+
+def _latest_pdf_mtime(data_folder):
+    """Data de modificação do PDF mais recente (0.0 se não houver PDFs)."""
+    pdfs = glob.glob(os.path.join(data_folder, "*.pdf"))
+    return max((os.path.getmtime(p) for p in pdfs), default=0.0)
+
+
+def build_vector_store(
+    data_folder="data/scholarships",
+    index_folder=DEFAULT_INDEX_FOLDER,
+    force_rebuild=False,
+):
     """
     Lê todos os PDFs da pasta de editais de bolsas, fatias os textos em chunks
     e gera um banco vetorial local utilizando FAISS e Embeddings gratuitos da HuggingFace.
+
+    O índice é persistido em disco (``index_folder``) e reutilizado nas chamadas
+    seguintes. Só é reconstruído quando um PDF é adicionado/modificado ou quando
+    ``force_rebuild=True``.
     """
     if not os.path.exists(data_folder):
         os.makedirs(data_folder)
         raise FileNotFoundError(f"A pasta '{data_folder}' foi criada, mas está vazia. Adicione PDFs de editais lá.")
+
+    embeddings = get_embeddings()
+    index_file = os.path.join(index_folder, "index.faiss")
+
+    # Reutiliza o índice existente se ele estiver atualizado em relação aos PDFs.
+    if (
+        not force_rebuild
+        and os.path.exists(index_file)
+        and _latest_pdf_mtime(data_folder) <= os.path.getmtime(index_file)
+    ):
+        print("✅ Índice FAISS carregado do disco (sem re-gerar embeddings).")
+        return FAISS.load_local(
+            index_folder, embeddings, allow_dangerous_deserialization=True
+        )
 
     # 1. Carrega todos os PDFs presentes na pasta data/scholarships
     loader = PyPDFDirectoryLoader(data_folder)
@@ -38,16 +79,14 @@ def build_vector_store(data_folder="data/scholarships"):
     docs_chunks = text_splitter.split_documents(documents)
     print(f"✂️ Documentos fatiados em {len(docs_chunks)} fragmentos (chunks).")
 
-    # 3. Inicializa os embeddings 100% locais (gratuitos e rodando direto na sua CPU)
+    # 3. Criando o banco de dados vetorial FAISS
     print("⏳ Gerando embeddings locais com HuggingFace (all-MiniLM-L6-v2)...")
-    embeddings = HuggingFaceEmbeddings(
-        model_name="sentence-transformers/all-MiniLM-L6-v2",
-        model_kwargs={'device': 'cpu'}
-    )
-
-    # 4. Criando e armazenando no banco de dados vetorial FAISS
     vector_store = FAISS.from_documents(docs_chunks, embeddings)
-    print("✅ Banco de dados vetorial FAISS criado com sucesso!")
+
+    # 4. Persistindo o índice para reutilização
+    os.makedirs(index_folder, exist_ok=True)
+    vector_store.save_local(index_folder)
+    print(f"✅ Banco de dados vetorial FAISS criado e guardado em '{index_folder}'.")
 
     return vector_store
 

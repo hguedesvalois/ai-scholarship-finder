@@ -1,7 +1,22 @@
-import streamlit as st
+import glob
 import os
+
+import streamlit as st
 from rag_engine import build_vector_store, create_scholarship_rag_chain
 from database import init_db, get_all_scholarships, add_scholarship
+
+
+def _folder_signature(folder):
+    """Assinatura dos PDFs (caminho + mtime) para invalidar o cache do Streamlit."""
+    return tuple(
+        sorted((f, os.path.getmtime(f)) for f in glob.glob(os.path.join(folder, "*.pdf")))
+    )
+
+
+@st.cache_resource(show_spinner=False)
+def get_cached_vector_store(folder, signature):
+    # O índice é lido do disco pelo rag_engine; o cache evita recarregá-lo a cada clique.
+    return build_vector_store(folder)
 
 # Configuração da página do Streamlit
 st.set_page_config(
@@ -35,8 +50,10 @@ with tab1:
         else:
             with st.spinner("A analisar editais e a gerar resposta com IA..."):
                 try:
-                    # Constrói o vector store e a cadeia RAG
-                    vector_store = build_vector_store(scholarships_folder)
+                    # Carrega (ou constrói) o vector store e a cadeia RAG
+                    vector_store = get_cached_vector_store(
+                        scholarships_folder, _folder_signature(scholarships_folder)
+                    )
                     rag_chain = create_scholarship_rag_chain(vector_store)
 
                     resposta = rag_chain.invoke({"query": pergunta})

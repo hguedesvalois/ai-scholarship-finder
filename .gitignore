@@ -13,3 +13,6 @@ __pycache__/
 
 # Bases de dados locais e temporárias
 data/*.db
+
+# Índice vetorial FAISS gerado localmente
+data/faiss_index/
